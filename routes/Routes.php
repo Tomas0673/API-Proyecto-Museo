@@ -122,6 +122,8 @@ $param); }
  usuarioAutenticado(); // hay que estar logueado
  if ($metodo === "POST" && $accion === "generar") { $c->generar($param); }
 // crea el PDF
+ elseif ($metodo === "GET" && $accion === "descargar") { $c->descargar($param); }
+// descarga el PDF
  elseif ($metodo === "GET") { $c->verTicket($accion); }
 // datos del ticket
  break;

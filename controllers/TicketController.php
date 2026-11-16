@@ -59,4 +59,42 @@ $numero], 201);
  : Response::json(["error" => "Todavía no se generó el ticket"],
 404);
  } // Finaliza el método verTicket.
+
+ public function descargar($idCompra) {
+ $ticket = $this->modelo->getByCompra($idCompra);
+ if (!$ticket) {
+ Response::json(["error" => "No se encontró el ticket de esta compra"], 404);
+ return;
+ }
+
+ $nombreArchivo = basename((string) ($ticket["pdf_path"] ?? ""));
+ if (!preg_match('/^TCK-\d+\.pdf$/i', $nombreArchivo)) {
+ Response::json(["error" => "La ruta del ticket no es válida"], 404);
+ return;
+ }
+
+ $directorio = realpath(__DIR__ . "/../public/uploads/tickets");
+ $rutaArchivo = $directorio === false
+ ? false
+ : realpath($directorio . DIRECTORY_SEPARATOR . $nombreArchivo);
+ $prefijoDirectorio = $directorio === false
+ ? ""
+ : $directorio . DIRECTORY_SEPARATOR;
+ if (
+ $rutaArchivo === false ||
+ !is_file($rutaArchivo) ||
+ !is_readable($rutaArchivo) ||
+ strncasecmp($rutaArchivo, $prefijoDirectorio, strlen($prefijoDirectorio)) !== 0
+ ) {
+ Response::json(["error" => "El archivo PDF del ticket no está disponible"], 404);
+ return;
+ }
+
+ header("Content-Type: application/pdf");
+ header('Content-Disposition: attachment; filename="' . $nombreArchivo . '"');
+ header("Content-Length: " . filesize($rutaArchivo));
+ header("X-Content-Type-Options: nosniff");
+ readfile($rutaArchivo);
+ exit;
+ } // Finaliza el método descargar.
 } // Finaliza la clase TicketController.
